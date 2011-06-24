@@ -47,26 +47,6 @@ public class Referee
     }
 
     @Override
-    protected IPlayer[] registerPlayers(Tuple<Integer, Class<IPlayer>>... players)
-        //forwaded error cause constructor to fail if any problems
-            throws
-            NoSuchMethodException,
-            InvocationTargetException,
-            IllegalAccessException,
-            InstantiationException {
-        return new IPlayer[]{
-                //black player
-                players[BLACK].getSecond()
-                        .getConstructor(int.class)
-                        .newInstance(players[BLACK].getFirst()),
-                //white player
-                players[WHITE].getSecond()
-                        .getConstructor(int.class)
-                        .newInstance(players[WHITE].getFirst())
-        };
-    }
-
-    @Override
     public List<Ply> getLegalMoves(OthelloContext gameContext) {
         IPlayer activePlayer = getActivePlayer();
         IPlayer[] allPlayers = getPlayers();
@@ -124,7 +104,7 @@ public class Referee
     }
 
     /*=========================================================================
-                         PRIVATE i.e Part specific to that game
+                         OTHELLO PART
       =========================================================================*/
 
     // specific to othello, because there is only one pawn's type
