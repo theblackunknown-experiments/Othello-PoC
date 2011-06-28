@@ -1,9 +1,10 @@
 package org.eisti.game.othello;
 
+import org.eisti.labs.game.Duration;
 import org.eisti.labs.game.IBoard;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.game.Ply;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -11,11 +12,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
+import static org.eisti.labs.util.Tuple.Tuple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,13 +30,16 @@ public class RefereeTest
         implements Othello {
 
     @Mock
-    IPlayer playerOne = mock(IPlayer.class, "player one"); // random player
-    IPlayer playerTwo = mock(IPlayer.class, "player rwo"); // another random player
+    IPlayer playerOne;
+    @Mock
+    IPlayer playerTwo;
 
-    Referee othelloReferee = new Referee(
-            playerOne,
-            playerTwo
-    );
+    Referee othelloReferee;
+
+    @Before
+    public void createReferee() {
+        othelloReferee = new Referee();
+    }
 
     @Test
     public void testGetLegalMoves() throws Exception {
@@ -46,12 +51,14 @@ public class RefereeTest
         // stub board data
         when(basicContext.getBoard())
                 .thenReturn(initialBoard);
+        when(basicContext.getActivePlayer())
+                .thenReturn(Tuple(playerOne, new Duration(10L, TimeUnit.SECONDS)));
 
         List<Ply> expectedPlyResult = new ArrayList<Ply>(4) {{
-            add(new Ply(Coordinate(2, 3)));
-            add(new Ply(Coordinate(3, 2)));
-            add(new Ply(Coordinate(5, 4)));
-            add(new Ply(Coordinate(4, 5)));
+            add(new Ply(Coordinate('D', '3')));
+            add(new Ply(Coordinate('C', '4')));
+            add(new Ply(Coordinate('E', '6')));
+            add(new Ply(Coordinate('F', '5')));
         }};
 
         assertEquals("Wrong legal moves suggested",
@@ -94,6 +101,8 @@ public class RefereeTest
         // stub board data
         when(basicContext.getBoard())
                 .thenReturn(initialBoard);
+        when(basicContext.getActivePlayer())
+                .thenReturn(Tuple(playerOne, new Duration(10L, TimeUnit.SECONDS)));
 
         //check
         assertEquals("Wrong legal moves suggested",
@@ -117,15 +126,29 @@ public class RefereeTest
           *
           */
         when(playerPly.getDestination())
-                .thenReturn(Coordinate(2, 3));
+                .thenReturn(Coordinate('D', '3'));
 
-        //initial game
-        Board originalGame = new Board(); //original game
+        // mock context
+        OthelloContext basicContext = mock(OthelloContext.class);
 
-        Board generatedSubGame = othelloReferee.generateSubGame(originalGame, playerPly);
+        Board initialBoard = new Board();  //initial board game
+
+        OthelloContext emptyMock = mock(OthelloContext.class);
+
+        // stub board data
+        when(basicContext.getBoard())
+                .thenReturn(initialBoard);
+        when(basicContext.getActivePlayer())
+                .thenReturn(Tuple(playerOne, new Duration(10L, TimeUnit.SECONDS)));
+        when(basicContext.buildEmptyContext())
+                .thenReturn(emptyMock);
+
+
+        OthelloContext newContext =
+                othelloReferee.generateNewContextFrom(basicContext, playerPly);
 
         assertTrue("Pawn not put",
-                generatedSubGame.getCase(2, 3).getPawnID() != IBoard.ICase.NO_PAWN);
+                newContext.getBoard().getCase(2, 3).getPawnID() != IBoard.ICase.NO_PAWN);
     }
 
     @Test

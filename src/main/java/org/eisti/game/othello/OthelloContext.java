@@ -6,6 +6,8 @@ import org.eisti.labs.game.IBoard;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.util.Tuple;
 
+import java.lang.reflect.Array;
+
 /**
  * @author MACHIZAUD Andréa
  * @version 23/06/11
@@ -14,15 +16,24 @@ public class OthelloContext
         extends GameContext<Board>
         implements Othello {
 
-    public OthelloContext(
-            Duration elapsedTime,
-            Board[] history,
-            IPlayer[] playersInGame,
-            Duration[] playersRemainingTime) {
-        super(elapsedTime, history, playersInGame, playersRemainingTime);
+    private static Board[] castArray(IBoard[] generalArray){
+        Board[] castedArray = new Board[generalArray.length];
+        for(int i=generalArray.length;i-->0;)
+            castedArray[i] = (Board) generalArray[i];
+        return castedArray;
     }
 
+    public OthelloContext(
+            Duration elapsedTime,
+            IBoard[] history,
+            IPlayer[] playersInGame,
+            Duration[] playersRemainingTime) {
+        super(elapsedTime, castArray(history), playersInGame, playersRemainingTime);
+    }
 
+    private OthelloContext() { super(); }
+
+    //FIXME Wrong ending : No one else can play, or no more empty case on board
     @Override
     public GameState getState() {
         int[] pawnCounter = new int[NUMBERS_OF_PLAYERS];
@@ -56,5 +67,15 @@ public class OthelloContext
                 return GameState.LOSE;
         } else
             return GameState.DRAW;
+    }
+
+    @Override
+    protected GameContext buildEmptyContext() {
+        return new OthelloContext();
+    }
+
+    @Override
+    public OthelloContext branchOff(Board board) {
+        return (OthelloContext) super.branchOff(board);
     }
 }
