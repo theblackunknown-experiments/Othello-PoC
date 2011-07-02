@@ -22,7 +22,6 @@
 package org.eisti.game.othello;
 
 import org.eisti.game.othello.tasks.LegalMoveRegistration;
-import org.eisti.game.othello.tasks.LineTraversor;
 import org.eisti.game.othello.tasks.ReversePawn;
 import org.eisti.labs.game.AbstractReferee;
 import org.eisti.labs.game.IBoard;
@@ -33,7 +32,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.eisti.game.othello.tasks.LineTraversor.GridTraversor.*;
 import static org.eisti.labs.game.IBoard.ICase.NO_PAWN;
@@ -52,6 +54,15 @@ public class Referee
     private static final ExecutorService LINE_CHECKER =
             Executors.newFixedThreadPool(values().length);
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                LINE_CHECKER.shutdownNow();
+            }
+        });
+    }
+
     @Override
     public int getNumberOfPlayer() {
         return NUMBERS_OF_PLAYERS;
@@ -63,14 +74,136 @@ public class Referee
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        LINE_CHECKER.shutdownNow();
-        super.finalize();
+    public Set<Ply> getLegalMoves(OthelloContext context) {
+        return legalMoves(context);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Set<Ply> getLegalMoves(OthelloContext context) {
+    public OthelloContext generateNewContextFrom(OthelloContext previousContext, Ply ply) {
+        Board oldBoard = previousContext.getBoard();
+        IPlayer activePlayer = previousContext.getActivePlayer().getFirst();
+
+        require(oldBoard.getPawnID(ply.getDestination()) == NO_PAWN,
+                "Already a pawn at given ply position : " + ply);
+
+        Board subGame = oldBoard.clone();
+        Ply.Coordinate newPawnPosition = ply.getDestination();
+        int playerPawn = getPawnID(activePlayer);
+
+        //put the pawn at correct place
+        subGame.getCase(
+                newPawnPosition.getRow(),
+                newPawnPosition.getColumn())
+                .setPawnID(playerPawn);
+
+        ReversePawn[] taskList =
+                new ReversePawn[values().length];
+        Future[] computations =
+                new Future[values().length];
+
+        taskList[NORTH.ordinal()] = new ReversePawn(
+                subGame,
+                NORTH,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() + 'A'),
+                        (char) (newPawnPosition.getRow() - 1 + '1')
+                ),
+                activePlayer
+        );
+        taskList[NORTH_EAST.ordinal()] = new ReversePawn(
+                subGame,
+                NORTH_EAST,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() + 1 + 'A'),
+                        (char) (newPawnPosition.getRow() - 1 + '1')
+                ),
+                activePlayer
+        );
+        taskList[EAST.ordinal()] = new ReversePawn(
+                subGame,
+                EAST,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() + 1 + 'A'),
+                        (char) (newPawnPosition.getRow() + '1')
+                ),
+                activePlayer
+        );
+        taskList[SOUTH_EAST.ordinal()] = new ReversePawn(
+                subGame,
+                SOUTH_EAST,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() + 1 + 'A'),
+                        (char) (newPawnPosition.getRow() + 1 + '1')
+                ),
+                activePlayer
+        );
+        taskList[SOUTH.ordinal()] = new ReversePawn(
+                subGame,
+                SOUTH,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() + 'A'),
+                        (char) (newPawnPosition.getRow() + 1 + '1')
+                ),
+                activePlayer
+        );
+        taskList[SOUTH_WEST.ordinal()] = new ReversePawn(
+                subGame,
+                SOUTH_WEST,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() - 1 + 'A'),
+                        (char) (newPawnPosition.getRow() + 1 + '1')
+                ),
+                activePlayer
+        );
+        taskList[WEST.ordinal()] = new ReversePawn(
+                subGame,
+                WEST,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() - 1 + 'A'),
+                        (char) (newPawnPosition.getRow() + '1')
+                ),
+                activePlayer
+        );
+        taskList[NORTH_WEST.ordinal()] = new ReversePawn(
+                subGame,
+                NORTH_WEST,
+                Coordinate(
+                        (char) (newPawnPosition.getColumn() - 1 + 'A'),
+                        (char) (newPawnPosition.getRow() - 1 + '1')
+                ),
+                activePlayer
+        );
+
+        try {
+            for (int i = taskList.length; i-- > 0; ) {
+                computations[i] = LINE_CHECKER.submit(taskList[i]);
+            }
+            for (int i = computations.length; i-- > 0; ) {
+                computations[i].get();
+            }
+        } catch (InterruptedException e) {
+            throw new Error("Unexpected error while computing reverse pawns", e);
+        } catch (ExecutionException e) {
+            throw new Error("Unexpected error while computing reverse pawns", e);
+        }
+
+        return previousContext.branchOff(subGame);
+    }
+
+
+    /*=========================================================================
+                       OTHELLO PART
+    =========================================================================*/
+
+    // specific to othello, because there is only one pawn's type
+
+    public static int getPawnID(IPlayer player) {
+        return player.getIdentifier() == Othello.WHITE
+                ? WHITE_PAWN_ID
+                : BLACK_PAWN_ID;
+    }
+
+    public static Set<Ply> legalMoves(OthelloContext context) {
         IPlayer activePlayer = context.getActivePlayer().getFirst();
         Board currentBoard = context.getBoard();
         Set<Ply> legalPlys = new HashSet<Ply>();
@@ -175,229 +308,5 @@ public class Referee
             }
 
         return legalPlys;
-    }
-
-    @Override
-    public OthelloContext generateNewContextFrom(OthelloContext previousContext, Ply ply) {
-        Board oldBoard = previousContext.getBoard();
-        IPlayer activePlayer = previousContext.getActivePlayer().getFirst();
-
-        require(oldBoard.getPawnID(ply.getDestination()) == NO_PAWN,
-                "Already a pawn at given ply position : " + ply);
-
-        Board subGame = oldBoard.clone();
-        Ply.Coordinate newPawnPosition = ply.getDestination();
-        int playerPawn = getPawnID(activePlayer);
-        int rivalPawn = playerPawn == BLACK_PAWN_ID
-                ? WHITE_PAWN_ID
-                : BLACK_PAWN_ID;
-
-        //put the pawn at correct place
-        subGame.getCase(
-                newPawnPosition.getRow(),
-                newPawnPosition.getColumn())
-                .setPawnID(playerPawn);
-
-        ReversePawn[] taskList =
-                new ReversePawn[values().length];
-        Future[] computations =
-                new Future[values().length];
-
-        taskList[NORTH.ordinal()] = new ReversePawn(
-                subGame,
-                NORTH,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() + 'A'),
-                        (char) (newPawnPosition.getRow() - 1 + '1')
-                ),
-                activePlayer
-        );
-        taskList[NORTH_EAST.ordinal()] = new ReversePawn(
-                subGame,
-                NORTH_EAST,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() + 1 + 'A'),
-                        (char) (newPawnPosition.getRow() - 1 + '1')
-                ),
-                activePlayer
-        );
-        taskList[EAST.ordinal()] = new ReversePawn(
-                subGame,
-                EAST,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() + 1 + 'A'),
-                        (char) (newPawnPosition.getRow() + '1')
-                ),
-                activePlayer
-        );
-        taskList[SOUTH_EAST.ordinal()] = new ReversePawn(
-                subGame,
-                SOUTH_EAST,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() + 1 + 'A'),
-                        (char) (newPawnPosition.getRow() + 1 + '1')
-                ),
-                activePlayer
-        );
-        taskList[SOUTH.ordinal()] = new ReversePawn(
-                subGame,
-                SOUTH,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() + 'A'),
-                        (char) (newPawnPosition.getRow() + 1 + '1')
-                ),
-                activePlayer
-        );
-        taskList[SOUTH_WEST.ordinal()] = new ReversePawn(
-                subGame,
-                SOUTH_WEST,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() - 1 + 'A'),
-                        (char) (newPawnPosition.getRow() + 1 + '1')
-                ),
-                activePlayer
-        );
-        taskList[WEST.ordinal()] = new ReversePawn(
-                subGame,
-                WEST,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() - 1 + 'A'),
-                        (char) (newPawnPosition.getRow() + '1')
-                ),
-                activePlayer
-        );
-        taskList[NORTH_WEST.ordinal()] = new ReversePawn(
-                subGame,
-                NORTH_WEST,
-                Coordinate(
-                        (char) (newPawnPosition.getColumn() - 1 + 'A'),
-                        (char) (newPawnPosition.getRow() - 1 + '1')
-                ),
-                activePlayer
-        );
-
-        try {
-            for (int i = taskList.length;i-->0;) {
-                computations[i] = LINE_CHECKER.submit(taskList[i]);
-            }
-            for (int i = computations.length;i-->0;) {
-                computations[i].get();
-            }
-        } catch (InterruptedException e) {
-            throw new Error("Unexpected error while computing reverse pawns", e);
-        } catch (ExecutionException e) {
-            throw new Error("Unexpected error while computing reverse pawns", e);
-        }
-
-        return previousContext.branchOff(subGame);
-    }
-
-
-    /*=========================================================================
-                       OTHELLO PART
-    =========================================================================*/
-
-    private static void reversePawn(
-            Board subGame,
-            IPlayer player,
-            LineTraversor.GridTraversor traversor,
-            Ply.Coordinate startPosition,
-            Ply.Coordinate endPosition) {
-
-        int playerPawn = getPawnID(player);
-        int rivalPawn = playerPawn == BLACK_PAWN_ID
-                ? WHITE_PAWN_ID
-                : BLACK_PAWN_ID;
-
-        switch (traversor) {
-            case NORTH:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     i > endPosition.getRow();
-                     i--) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case NORTH_EAST:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     i > endPosition.getRow() && j < endPosition.getColumn();
-                     i--, j++) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case EAST:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     j < endPosition.getColumn();
-                     j++) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case SOUTH_EAST:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     i < endPosition.getRow() && j < endPosition.getColumn();
-                     i++, j++) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case SOUTH:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     i < endPosition.getRow();
-                     i++) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case SOUTH_WEST:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     i < endPosition.getRow() && j > endPosition.getColumn();
-                     i++, j--) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case WEST:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     j > endPosition.getColumn();
-                     j--) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-            case NORTH_WEST:
-                for (int i = startPosition.getRow(),
-                             j = startPosition.getColumn();
-                     i > endPosition.getRow() && j > endPosition.getColumn();
-                     i--, j--) {
-                    IBoard.ICase area = subGame.getCase(i, j);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-                }
-                break;
-        }
-    }
-
-    // specific to othello, because there is only one pawn's type
-
-    public static int getPawnID(IPlayer player) {
-        return player.getIdentifier() == Othello.WHITE
-                ? WHITE_PAWN_ID
-                : BLACK_PAWN_ID;
     }
 }
