@@ -21,10 +21,7 @@
  */
 package org.eisti.game.othello;
 
-import org.eisti.labs.game.Duration;
-import org.eisti.labs.game.IBoard;
-import org.eisti.labs.game.IPlayer;
-import org.eisti.labs.game.Ply;
+import org.eisti.labs.game.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,19 +46,19 @@ import static org.mockito.Mockito.when;
  * @version 6/22/11
  */
 @RunWith(MockitoJUnitRunner.class)
-public class RefereeTest
-        implements Othello {
+public class RulesTest
+        implements OthelloProperties {
 
     @Mock
     IPlayer playerOne;
     @Mock
     IPlayer playerTwo;
 
-    Referee othelloReferee;
+    Rules othelloRules;
 
     @Before
     public void createReferee() {
-        othelloReferee = new Referee();
+        othelloRules = new Rules();
     }
 
     @Test
@@ -75,7 +72,7 @@ public class RefereeTest
         when(basicContext.getBoard())
                 .thenReturn(initialBoard);
         when(basicContext.getActivePlayer())
-                .thenReturn(Tuple(playerOne, new Duration(10L, TimeUnit.SECONDS)));
+                .thenReturn(Tuple(playerOne, new Clock(10L, TimeUnit.SECONDS)));
 
         List<Ply> expectedPlyResult = new ArrayList<Ply>(4) {{
             add(new Ply(Coordinate('D', '3')));
@@ -84,7 +81,7 @@ public class RefereeTest
             add(new Ply(Coordinate('F', '5')));
         }};
 
-        Set<Ply> legalMoves = othelloReferee.getLegalMoves(basicContext);
+        Set<Ply> legalMoves = othelloRules.getLegalMoves(basicContext);
 
         for (Ply ply : legalMoves)
             assertTrue("Wrong legal moves suggested",
@@ -127,12 +124,12 @@ public class RefereeTest
         when(basicContext.getBoard())
                 .thenReturn(initialBoard);
         when(basicContext.getActivePlayer())
-                .thenReturn(Tuple(playerOne, new Duration(10L, TimeUnit.SECONDS)));
+                .thenReturn(Tuple(playerOne, new Clock(10L, TimeUnit.SECONDS)));
 
         //check
         assertEquals("Wrong legal moves suggested",
                 0,
-                othelloReferee.getLegalMoves(basicContext).size());
+                othelloRules.getLegalMoves(basicContext).size());
 
     }
 
@@ -164,13 +161,13 @@ public class RefereeTest
         when(basicContext.getBoard())
                 .thenReturn(initialBoard);
         when(basicContext.getActivePlayer())
-                .thenReturn(Tuple(playerOne, new Duration(10L, TimeUnit.SECONDS)));
+                .thenReturn(Tuple(playerOne, new Clock(10L, TimeUnit.SECONDS)));
         when(basicContext.buildEmptyContext())
                 .thenReturn(emptyMock);
 
 
         OthelloContext newContext =
-                othelloReferee.generateNewContextFrom(basicContext, playerPly);
+                othelloRules.doPly(basicContext, playerPly);
 
         assertTrue("Pawn not put",
                 newContext.getBoard().getCase(4, 4).getPawnID() != IBoard.ICase.NO_PAWN);
@@ -180,20 +177,20 @@ public class RefereeTest
     public void expectedOwnerID() {
         assertEquals("Wrong owner for black pawn",
                 BLACK,
-                othelloReferee.getOwnerID(BLACK_PAWN_ID));
+                othelloRules.getOwnerID(BLACK_PAWN_ID));
         assertEquals("Wrong owner for white pawn",
                 WHITE,
-                othelloReferee.getOwnerID(WHITE_PAWN_ID));
+                othelloRules.getOwnerID(WHITE_PAWN_ID));
     }
 
     @Test
     public void expectedPawnTypeID() {
         assertEquals("Wrong type for black pawn",
                 PAWN,
-                othelloReferee.getPawnTypeID(BLACK_PAWN_ID));
+                othelloRules.getPawnTypeID(BLACK_PAWN_ID));
         assertEquals("Wrong type for white pawn",
                 PAWN,
-                othelloReferee.getPawnTypeID(WHITE_PAWN_ID));
+                othelloRules.getPawnTypeID(WHITE_PAWN_ID));
     }
 
 }

@@ -23,7 +23,7 @@ package org.eisti.game.othello;
 
 import org.eisti.game.othello.tasks.LegalMoveRegistration;
 import org.eisti.game.othello.tasks.ReversePawn;
-import org.eisti.labs.game.AbstractReferee;
+import org.eisti.labs.game.AbstractRules;
 import org.eisti.labs.game.IBoard;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.game.Ply;
@@ -46,9 +46,9 @@ import static org.eisti.labs.util.Validation.require;
  * @author MACHIZAUD Andréa
  * @version 6/20/11
  */
-public class Referee
-        extends AbstractReferee<Board, OthelloContext>
-        implements Othello {
+public class Rules
+        extends AbstractRules<Board, OthelloContext>
+        implements OthelloProperties {
 
     //Thread pool as many as possible direction checking
     private static final ExecutorService LINE_CHECKER =
@@ -79,7 +79,7 @@ public class Referee
     }
 
     @Override
-    public OthelloContext generateNewContextFrom(OthelloContext previousContext, Ply ply) {
+    public OthelloContext doPly(OthelloContext previousContext, Ply ply) {
         Board oldBoard = previousContext.getBoard();
         IPlayer activePlayer = previousContext.getActivePlayer().getFirst();
 
@@ -198,7 +198,7 @@ public class Referee
     // specific to othello, because there is only one pawn's type
 
     public static int getPawnID(IPlayer player) {
-        return player.getIdentifier() == Othello.WHITE
+        return player.getIdentifier() == OthelloProperties.WHITE
                 ? WHITE_PAWN_ID
                 : BLACK_PAWN_ID;
     }

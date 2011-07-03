@@ -52,7 +52,7 @@ import org.eisti.labs.game.AbstractBoard;
  */
 public class Board
         extends AbstractBoard
-        implements Othello {
+        implements OthelloProperties {
 
     public Board() {
         super(

@@ -22,8 +22,8 @@
 package org.eisti.game.othello.tasks;
 
 import org.eisti.game.othello.Board;
-import org.eisti.game.othello.Othello;
-import org.eisti.game.othello.Referee;
+import org.eisti.game.othello.OthelloProperties;
+import org.eisti.game.othello.Rules;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.game.Ply;
 
@@ -55,10 +55,10 @@ public class LegalMoveRegistration
             Ply.Coordinate start,
             IPlayer currentPlayer) {
         super(board, start, direction);
-        this.playerPawn = Referee.getPawnID(currentPlayer);
-        this.rivalPawn = playerPawn == Othello.BLACK_PAWN_ID
-                ? Othello.WHITE_PAWN_ID
-                : Othello.BLACK_PAWN_ID;
+        this.playerPawn = Rules.getPawnID(currentPlayer);
+        this.rivalPawn = playerPawn == OthelloProperties.BLACK_PAWN_ID
+                ? OthelloProperties.WHITE_PAWN_ID
+                : OthelloProperties.BLACK_PAWN_ID;
     }
 
     /**

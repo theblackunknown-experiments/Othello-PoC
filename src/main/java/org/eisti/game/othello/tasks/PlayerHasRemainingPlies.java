@@ -22,7 +22,7 @@
 package org.eisti.game.othello.tasks;
 
 import org.eisti.game.othello.OthelloContext;
-import org.eisti.game.othello.Referee;
+import org.eisti.game.othello.Rules;
 
 import java.util.concurrent.Callable;
 
@@ -43,6 +43,6 @@ public class PlayerHasRemainingPlies
 
     @Override
     public Boolean call() throws Exception {
-        return Referee.legalMoves(_context).size() > 0;
+        return Rules.legalMoves(_context).size() > 0;
     }
 }

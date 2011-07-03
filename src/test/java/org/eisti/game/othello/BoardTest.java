@@ -25,8 +25,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.awt.*;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -35,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  * @version 6/21/11
  */
 public class BoardTest
-    implements Othello {
+    implements OthelloProperties {
 
     Board othelloBoard;
 

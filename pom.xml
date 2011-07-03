@@ -4,7 +4,7 @@
 
     <groupId>org.eisti.game</groupId>
     <artifactId>othello</artifactId>
-    <version>0.1</version>
+    <version>1.0</version>
 
     <name>Othello Game Project</name>
     <inceptionYear>2011</inceptionYear>
@@ -45,7 +45,30 @@
     </properties>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.eisti.labs.game.Match</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>runnable-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -121,7 +144,7 @@
         <dependency>
             <groupId>org.eisti.labs</groupId>
             <artifactId>core</artifactId>
-            <version>0.1</version>
+            <version>0.5</version>
         </dependency>
     </dependencies>
 

@@ -25,7 +25,7 @@ package org.eisti.game.othello.tasks;
 import org.eisti.game.othello.Board;
 import org.eisti.labs.game.Ply;
 
-import static org.eisti.game.othello.Othello.OTHELLO_DIMENSION;
+import static org.eisti.game.othello.OthelloProperties.OTHELLO_DIMENSION;
 
 /**
  * Represent task which traverse a grid line

@@ -22,10 +22,7 @@
 package org.eisti.game.othello;
 
 import org.eisti.game.othello.tasks.PlayerHasRemainingPlies;
-import org.eisti.labs.game.Duration;
-import org.eisti.labs.game.GameContext;
-import org.eisti.labs.game.IBoard;
-import org.eisti.labs.game.IPlayer;
+import org.eisti.labs.game.*;
 import org.eisti.labs.util.Tuple;
 
 import java.util.concurrent.*;
@@ -36,7 +33,7 @@ import java.util.concurrent.*;
  */
 public class OthelloContext
         extends GameContext<Board,OthelloContext>
-        implements Othello {
+        implements OthelloProperties {
 
     private static Board[] castArray(IBoard[] generalArray) {
         Board[] castedArray = new Board[generalArray.length];
@@ -46,10 +43,10 @@ public class OthelloContext
     }
 
     public OthelloContext(
-            Duration elapsedTime,
+            Clock elapsedTime,
             IBoard[] history,
             IPlayer[] playersInGame,
-            Duration[] playersRemainingTime) {
+            Clock[] playersRemainingTime) {
         super(elapsedTime, castArray(history), playersInGame, playersRemainingTime);
     }
 
@@ -63,7 +60,7 @@ public class OthelloContext
         int[] pawnCounter = new int[NUMBERS_OF_PLAYERS];
         pawnCounter[BLACK] = pawnCounter[WHITE] = 0;
         Board currentBoard = getBoard();
-        Tuple<IPlayer, Duration>[] players = getPlayers();
+        Tuple<IPlayer, Clock>[] players = getPlayers();
 
         ExecutorService remainingMoveChecker = null;
         try {
