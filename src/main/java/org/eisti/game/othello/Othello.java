@@ -44,4 +44,9 @@ public class Othello
     public String provideContextClazz() {
         return OthelloContext.class.getCanonicalName();
     }
+
+    @Override
+    public void shutdownHook(){
+        Rules.LINE_CHECKER.shutdownNow();
+    }
 }

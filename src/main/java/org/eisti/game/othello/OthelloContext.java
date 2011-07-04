@@ -22,17 +22,23 @@
 package org.eisti.game.othello;
 
 import org.eisti.game.othello.tasks.PlayerHasRemainingPlies;
-import org.eisti.labs.game.*;
+import org.eisti.labs.game.Clock;
+import org.eisti.labs.game.GameContext;
+import org.eisti.labs.game.IBoard;
+import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.util.Tuple;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 23/06/11
  */
 public class OthelloContext
-        extends GameContext<Board,OthelloContext>
+        extends GameContext<Board, OthelloContext>
         implements OthelloProperties {
 
     private static Board[] castArray(IBoard[] generalArray) {
@@ -110,7 +116,9 @@ public class OthelloContext
             }
 
         } catch (InterruptedException e) {
-            throw new Error("Unexpected error while computing remaining player's moves", e);
+            //Computation can be interrupted by bot worker
+//            throw new Error("Unexpected error while computing remaining player's moves", e);
+            return null;
         } catch (ExecutionException e) {
             throw new Error("Unexpected error while computing remaining player's moves", e);
         } finally {
