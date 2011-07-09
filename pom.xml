@@ -42,6 +42,7 @@
         <mockito.version>1.8.5</mockito.version>
         <javadoc.version>2.7</javadoc.version>
         <license.licenseName>gpl_v3</license.licenseName>
+        <ia-framework.version>0.6</ia-framework.version>
     </properties>
 
     <build>
@@ -144,7 +145,7 @@
         <dependency>
             <groupId>org.eisti.labs</groupId>
             <artifactId>core</artifactId>
-            <version>0.5</version>
+            <version>${ia-framework.version}</version>
         </dependency>
     </dependencies>
 

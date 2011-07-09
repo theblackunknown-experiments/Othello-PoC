@@ -21,7 +21,10 @@
  */
 package org.eisti.game.othello;
 
-import org.eisti.labs.game.*;
+import org.eisti.labs.game.Clock;
+import org.eisti.labs.game.IBoard;
+import org.eisti.labs.game.IPlayer;
+import org.eisti.labs.game.Ply;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -98,23 +101,21 @@ public class RulesTest
          *  XOX
          *  XXX
          */
-        initialBoard.getCase(3, 3).setPawnID(
+        initialBoard.setPawn('D', '4',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(3, 4).setPawnID(
+        initialBoard.setPawn('E', '4',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(3, 5).setPawnID(
+        initialBoard.setPawn('F', '4',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(4, 3).setPawnID(
+        initialBoard.setPawn('D', '5',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(4, 4).setPawnID(
-                WHITE_PAWN_ID);
-        initialBoard.getCase(4, 5).setPawnID(
+        initialBoard.setPawn('F', '5',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(5, 3).setPawnID(
+        initialBoard.setPawn('D', '6',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(5, 4).setPawnID(
+        initialBoard.setPawn('E', '6',
                 BLACK_PAWN_ID);
-        initialBoard.getCase(5, 5).setPawnID(
+        initialBoard.setPawn('F', '6',
                 BLACK_PAWN_ID);
 
         // mock context
@@ -170,7 +171,7 @@ public class RulesTest
                 othelloRules.doPly(basicContext, playerPly);
 
         assertTrue("Pawn not put",
-                newContext.getBoard().getCase(4, 4).getPawnID() != IBoard.ICase.NO_PAWN);
+                !newContext.getBoard().isAt('E', '5', IBoard.NO_PAWN));
     }
 
     @Test

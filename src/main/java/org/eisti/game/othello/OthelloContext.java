@@ -22,10 +22,7 @@
 package org.eisti.game.othello;
 
 import org.eisti.game.othello.tasks.PlayerHasRemainingPlies;
-import org.eisti.labs.game.Clock;
-import org.eisti.labs.game.GameContext;
-import org.eisti.labs.game.IBoard;
-import org.eisti.labs.game.IPlayer;
+import org.eisti.labs.game.*;
 import org.eisti.labs.util.Tuple;
 
 import java.util.concurrent.ExecutionException;
@@ -90,8 +87,8 @@ public class OthelloContext
             }//no one else can play : compute statistics and determine winner
             else {
                 //gather statistics
-                for (IBoard.ICase area : currentBoard) {
-                    int pawnID = area.getPawnID();
+                for (Ply.Coordinate location : currentBoard) {
+                    int pawnID = currentBoard.getPawn(location);
                     if (pawnID == BLACK_PAWN_ID) {
                         pawnCounter[BLACK]++;
                     } else if (pawnID == WHITE_PAWN_ID) {

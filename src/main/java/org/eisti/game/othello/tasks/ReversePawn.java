@@ -24,7 +24,6 @@ package org.eisti.game.othello.tasks;
 import org.eisti.game.othello.Board;
 import org.eisti.game.othello.OthelloProperties;
 import org.eisti.game.othello.Rules;
-import org.eisti.labs.game.IBoard;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.game.Ply;
 
@@ -42,10 +41,6 @@ public class ReversePawn
      * Current player pawn ID
      */
     private int playerPawn;
-    /**
-     * Current rival pawn ID
-     */
-    private int rivalPawn;
 
     public ReversePawn(
             Board board,
@@ -55,9 +50,6 @@ public class ReversePawn
         super(board, start, direction);
 
         this.playerPawn = Rules.getPawnID(currentPlayer);
-        this.rivalPawn = playerPawn == OthelloProperties.BLACK_PAWN_ID
-                ? OthelloProperties.WHITE_PAWN_ID
-                : OthelloProperties.BLACK_PAWN_ID;
     }
 
     /**
@@ -66,34 +58,21 @@ public class ReversePawn
     public void run() {
         LineIterator checker = getIterator(_direction);
         //look if we can reverse
-        for (int rowCursor = _start.getRow(),
-                     columnCursor = _start.getColumn();
-             checker.verify(rowCursor, columnCursor, null);
-             rowCursor = checker.updateRow(rowCursor),
-                     columnCursor = checker.updateColumn(columnCursor)) {
-
-            int pawnID = _board.getCase(rowCursor, columnCursor).getPawnID();
+        for (Ply.Coordinate cursor = checker.initialize(_start);
+             checker.verify(cursor, null);
+             cursor = checker.update(cursor)) {
 
             //it's ok to reverse
-            if (pawnID == playerPawn) {
-
-                Ply.Coordinate target = Ply.Coordinate.Coordinate(
-                        (char)(columnCursor + 'A'),
-                        (char)(rowCursor + '1')
-                );
+            if (_board.isAt(cursor, playerPawn)) {
 
                 //reversion
-                for (int rowReverse = _start.getRow(),
-                         columnReverse = _start.getColumn();
-                     checker.verify(rowReverse, columnReverse, target);
-                     rowReverse = checker.updateRow(rowReverse),
-                             columnReverse = checker.updateColumn(columnReverse)) {
-
-                    IBoard.ICase area = _board.getCase(rowReverse, columnReverse);
-                    if (area.getPawnID() == rivalPawn)
-                        area.setPawnID(playerPawn);
-
+                for (Ply.Coordinate reverse = _start;
+                     checker.verify(reverse, cursor);
+                     reverse = checker.update(reverse)) {
+                    _board.setPawn(reverse, playerPawn);
                 }
+                //reverse completed in this direction
+                break;
 
             }
 

@@ -29,7 +29,7 @@ import org.eisti.labs.game.Ply;
 
 import java.util.concurrent.Callable;
 
-import static org.eisti.labs.game.IBoard.ICase.NO_PAWN;
+import static org.eisti.labs.game.IBoard.NO_PAWN;
 import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
 
 /**
@@ -70,23 +70,23 @@ public class LegalMoveRegistration
     public Ply call() {
         boolean rivalPawnEncountered = false;
         LineIterator checker = getIterator(_direction);
-        for (int rowCursor = _start.getRow(),
-                     columnCursor = _start.getColumn();
-             checker.verify(rowCursor, columnCursor, null);
-             rowCursor = checker.updateRow(rowCursor),
-                     columnCursor = checker.updateColumn(columnCursor)) {
+//        for (int rowCursor = _start.getRow(),
+//                     columnCursor = _start.getColumn();
+//             checker.verify(rowCursor, columnCursor, null);
+//             rowCursor = checker.updateRow(rowCursor),
+//                     columnCursor = checker.updateColumn(columnCursor)) {
+        for (Ply.Coordinate cursor = checker.initialize(_start);
+             checker.verify(cursor, null);
+             cursor = checker.update(cursor)) {
 
-            int pawnID = _board.getCase(rowCursor, columnCursor).getPawnID();
+            int pawnID = _board.getPawn(cursor);
 
             //stop on a empty case
             if (pawnID == NO_PAWN) {
                 //it's a legal move if we already encounter a rival pawn,
                 // thus we can reverse a line
                 if (rivalPawnEncountered)
-                    return new Ply(Coordinate(
-                            (char) (columnCursor + 'A'),
-                            (char) (rowCursor + '1')
-                    ));
+                    return new Ply(cursor);
                 else
                     break;
             } else if (pawnID == playerPawn) // own pawn encountered, no line reverse possible

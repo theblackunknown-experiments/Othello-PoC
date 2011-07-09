@@ -22,9 +22,9 @@
 package org.eisti.game.othello;
 
 import org.eisti.game.othello.tasks.LegalMoveRegistration;
+import org.eisti.game.othello.tasks.LineTraversor;
 import org.eisti.game.othello.tasks.ReversePawn;
 import org.eisti.labs.game.AbstractRules;
-import org.eisti.labs.game.IBoard;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.game.Ply;
 
@@ -34,10 +34,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.eisti.game.othello.tasks.LineTraversor.GridTraversor.*;
-import static org.eisti.labs.game.IBoard.ICase.NO_PAWN;
-import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
-import static org.eisti.labs.util.Validation.require;
+import static org.eisti.game.othello.tasks.LineTraversor.GridTraversor.values;
 
 /**
  * @author MACHIZAUD Andréa
@@ -75,7 +72,7 @@ public class Rules
         Board oldBoard = previousContext.getBoard();
         IPlayer activePlayer = previousContext.getActivePlayer().getFirst();
 
-        require(oldBoard.getPawnID(ply.getDestination()) == NO_PAWN,
+        require(oldBoard.isAt(ply.getDestination(), Iboard.NO_PAWN),
                 "Already a pawn at given ply position : " + ply);
 
         Board subGame = oldBoard.clone();
@@ -83,103 +80,18 @@ public class Rules
         int playerPawn = getPawnID(activePlayer);
 
         //put the pawn at correct place
-        subGame.getCase(
-                newPawnPosition.getRow(),
-                newPawnPosition.getColumn())
-                .setPawnID(playerPawn);
-
-        ReversePawn[] taskList =
-                new ReversePawn[values().length];
-
-        if (newPawnPosition.getRow() > 0)
-            taskList[NORTH.ordinal()] = new ReversePawn(
-                    subGame,
-                    NORTH,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() + 'A'),
-                            (char) (newPawnPosition.getRow() - 1 + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getRow() > 0
-                && newPawnPosition.getColumn() < OTHELLO_DIMENSION.width - 1)
-            taskList[NORTH_EAST.ordinal()] = new ReversePawn(
-                    subGame,
-                    NORTH_EAST,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() + 1 + 'A'),
-                            (char) (newPawnPosition.getRow() - 1 + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getColumn() < OTHELLO_DIMENSION.width - 1)
-            taskList[EAST.ordinal()] = new ReversePawn(
-                    subGame,
-                    EAST,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() + 1 + 'A'),
-                            (char) (newPawnPosition.getRow() + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getRow() < OTHELLO_DIMENSION.height - 1
-                && newPawnPosition.getColumn() < OTHELLO_DIMENSION.width - 1)
-            taskList[SOUTH_EAST.ordinal()] = new ReversePawn(
-                    subGame,
-                    SOUTH_EAST,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() + 1 + 'A'),
-                            (char) (newPawnPosition.getRow() + 1 + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getRow() < OTHELLO_DIMENSION.height - 1)
-            taskList[SOUTH.ordinal()] = new ReversePawn(
-                    subGame,
-                    SOUTH,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() + 'A'),
-                            (char) (newPawnPosition.getRow() + 1 + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getRow() < OTHELLO_DIMENSION.height - 1
-                && newPawnPosition.getColumn() > 0)
-            taskList[SOUTH_WEST.ordinal()] = new ReversePawn(
-                    subGame,
-                    SOUTH_WEST,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() - 1 + 'A'),
-                            (char) (newPawnPosition.getRow() + 1 + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getColumn() > 0)
-            taskList[WEST.ordinal()] = new ReversePawn(
-                    subGame,
-                    WEST,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() - 1 + 'A'),
-                            (char) (newPawnPosition.getRow() + '1')
-                    ),
-                    activePlayer
-            );
-        if (newPawnPosition.getRow() > 0
-                && newPawnPosition.getColumn() > 0)
-            taskList[NORTH_WEST.ordinal()] = new ReversePawn(
-                    subGame,
-                    NORTH_WEST,
-                    Coordinate(
-                            (char) (newPawnPosition.getColumn() - 1 + 'A'),
-                            (char) (newPawnPosition.getRow() - 1 + '1')
-                    ),
-                    activePlayer
-            );
+        subGame.setPawn(newPawnPosition, playerPawn);
 
         try {
-            for (ReversePawn task : taskList)
-                if (task != null)
-                    LINE_CHECKER.submit(task);
+            //reverse pawn line in parallel
+            for (LineTraversor.GridTraversor direction : LineTraversor.GridTraversor.values())
+                LINE_CHECKER.submit(new ReversePawn(
+                        subGame,
+                        direction,
+                        newPawnPosition,
+                        activePlayer
+                ));
+            //wait for computations to end
             LINE_CHECKER.awaitTermination(0, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new Error("Unexpected error while computing reverse pawns", e);
@@ -212,98 +124,19 @@ public class Rules
         Collection<LegalMoveRegistration> taskList =
                 new ArrayList<LegalMoveRegistration>(values().length);
 
-        for (IBoard.ICase area : currentBoard)
-            if (area.getPawnID() == playerPawn) {
-
-                Ply.Coordinate start = area.getPosition();
-
-                //check in every direction where we can put our pawn
-                if (start.getRow() > 0)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            NORTH,
-                            Coordinate(
-                                    (char) (start.getColumn() + 'A'),
-                                    (char) (start.getRow() - 1 + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getRow() > 0
-                        && start.getColumn() < OTHELLO_DIMENSION.width - 1)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            NORTH_EAST,
-                            Coordinate(
-                                    (char) (start.getColumn() + 1 + 'A'),
-                                    (char) (start.getRow() - 1 + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getColumn() < OTHELLO_DIMENSION.width - 1)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            EAST,
-                            Coordinate(
-                                    (char) (start.getColumn() + 1 + 'A'),
-                                    (char) (start.getRow() + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getRow() < OTHELLO_DIMENSION.height - 1
-                        && start.getColumn() < OTHELLO_DIMENSION.width - 1)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            SOUTH_EAST,
-                            Coordinate(
-                                    (char) (start.getColumn() + 1 + 'A'),
-                                    (char) (start.getRow() + 1 + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getRow() < OTHELLO_DIMENSION.height - 1)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            SOUTH,
-                            Coordinate(
-                                    (char) (start.getColumn() + 'A'),
-                                    (char) (start.getRow() + 1 + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getRow() < OTHELLO_DIMENSION.height - 1
-                        && start.getColumn() > 0)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            SOUTH_WEST,
-                            Coordinate(
-                                    (char) (start.getColumn() - 1 + 'A'),
-                                    (char) (start.getRow() + 1 + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getColumn() > 0)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            WEST,
-                            Coordinate(
-                                    (char) (start.getColumn() - 1 + 'A'),
-                                    (char) (start.getRow() + '1')
-                            ),
-                            activePlayer
-                    ));
-                if (start.getRow() > 0
-                        && start.getColumn() > 0)
-                    taskList.add(new LegalMoveRegistration(
-                            currentBoard,
-                            NORTH_WEST,
-                            Coordinate(
-                                    (char) (start.getColumn() - 1 + 'A'),
-                                    (char) (start.getRow() - 1 + '1')
-                            ),
-                            activePlayer
-                    ));
+        for (Ply.Coordinate location : currentBoard)
+            if (currentBoard.isAt(location, playerPawn)) {
 
                 try {
+                    //lookup in every direction, in parallel
+                    for (LineTraversor.GridTraversor direction : LineTraversor.GridTraversor.values())
+                        taskList.add(new LegalMoveRegistration(
+                                currentBoard,
+                                direction,
+                                location,
+                                activePlayer
+                        ));
+                    //fetch computation result and aggregated them in the set
                     for (Future<Ply> computation : LINE_CHECKER.invokeAll(taskList)) {
                         Ply result = computation.get();
                         if (result != null)
@@ -311,7 +144,6 @@ public class Rules
                     }
                 } catch (InterruptedException e) {
                     //Computation can be interrupted by bot worker
-//                    throw new Error("Unexpected error while computing legal moves", e);
                 } catch (ExecutionException e) {
                     throw new Error("Unexpected error while computing legal moves", e);
                 }

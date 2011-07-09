@@ -51,7 +51,7 @@ import org.eisti.labs.game.AbstractBoard;
  * @version 6/19/11
  */
 public class Board
-        extends AbstractBoard
+        extends AbstractBoard<Board>
         implements OthelloProperties {
 
     public Board() {
@@ -65,14 +65,9 @@ public class Board
      */
     @Override
     protected void initializeBoard() {
-        getCase(3, 3).setPawnID(WHITE_PAWN_ID);
-        getCase(3, 4).setPawnID(BLACK_PAWN_ID);
-        getCase(4, 3).setPawnID(BLACK_PAWN_ID);
-        getCase(4, 4).setPawnID(WHITE_PAWN_ID);
-    }
-
-    @Override
-    public Board clone() {
-        return (Board) super.clone();
+        setPawn('D','4',WHITE_PAWN_ID);
+        setPawn('D','5',BLACK_PAWN_ID);
+        setPawn('E','4',BLACK_PAWN_ID);
+        setPawn('E','5',WHITE_PAWN_ID);
     }
 }

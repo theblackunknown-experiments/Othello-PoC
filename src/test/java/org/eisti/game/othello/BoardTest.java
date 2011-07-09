@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  * @version 6/21/11
  */
 public class BoardTest
-    implements OthelloProperties {
+        implements OthelloProperties {
 
     Board othelloBoard;
 
@@ -49,13 +49,13 @@ public class BoardTest
                 OTHELLO_DIMENSION);
 
         assertTrue("Badly initialized : no white pawn at (4,4)",
-                WHITE_PAWN_ID == othelloBoard.getCase(3, 3).getPawnID());
+                WHITE_PAWN_ID == othelloBoard.getPawn('D', '4'));
         assertTrue("Badly initialized : no white pawn at (5,5)",
-                WHITE_PAWN_ID == othelloBoard.getCase(4, 4).getPawnID());
+                WHITE_PAWN_ID == othelloBoard.getPawn('E', '5'));
         assertTrue("Badly initialized : no black pawn at (4,4)",
-                BLACK_PAWN_ID == othelloBoard.getCase(3, 4).getPawnID());
+                BLACK_PAWN_ID == othelloBoard.getPawn('D', '5'));
         assertTrue("Badly initialized : no black pawn at (4,4)",
-                BLACK_PAWN_ID == othelloBoard.getCase(4, 3).getPawnID());
+                BLACK_PAWN_ID == othelloBoard.getPawn('E', '4'));
     }
 
     @Ignore(value = "only purpose is to see the board display")

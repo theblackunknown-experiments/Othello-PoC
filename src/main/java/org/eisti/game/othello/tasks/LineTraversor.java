@@ -26,6 +26,7 @@ import org.eisti.game.othello.Board;
 import org.eisti.labs.game.Ply;
 
 import static org.eisti.game.othello.OthelloProperties.OTHELLO_DIMENSION;
+import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
 
 /**
  * Represent task which traverse a grid line
@@ -68,31 +69,31 @@ abstract public class LineTraversor {
      * Interface designing as a utility for for-loop condition checking and variable update utility
      */
     protected interface LineIterator {
+
         /**
          * For-loop condition checking
          *
-         * @param row    current row
-         * @param column current column
-         * @param goal   target position
+         * @param current - current location
+         * @param goal    - target position
          * @return if for-loop can go on
          */
-        boolean verify(int row, int column, Ply.Coordinate goal);
+        boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal);
 
         /**
-         * Row variable update
+         * Loop variable initialization, generally there is a little gap with given location
          *
-         * @param previous previous value for row variable
-         * @return next value for row variable
+         * @param startLocation - start location argument passed
+         * @return start value to iterate
          */
-        int updateRow(int previous);
+        Ply.Coordinate initialize(final Ply.Coordinate startLocation);
 
         /**
-         * Column variable update
+         * Loop variable update
          *
-         * @param previous previous value for column variable
-         * @return next value for column variable
+         * @param previous previous value from loop
+         * @return next value
          */
-        int updateColumn(int previous);
+        Ply.Coordinate update(final Ply.Coordinate previous);
     }
 
     /**
@@ -126,154 +127,195 @@ abstract public class LineTraversor {
 
     //Iterator when we got north
     private static final LineIterator NORTH_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public final boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal) {
             return goal == null
-                    ? row >= 0
-                    : row > goal.getRow();
+                    ? current.getRow() >= '1'
+                    : current.getRow() > goal.getRow();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous - 1;
+        public final Ply.Coordinate initialize(final Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) startLocation.getColumn(),
+                    (char) (startLocation.getRow() - 1)
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go north east
     private static final LineIterator NORTH_EAST_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public final boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal) {
             return goal == null
-                    ? row >= 0 && column < OTHELLO_DIMENSION.width
-                    : row > goal.getRow() && column < goal.getColumn();
+                    ? current.getRow() >= '1' && current.getColumn() < (char) ('A' + OTHELLO_DIMENSION.width)
+                    : current.getRow() > goal.getRow() && current.getColumn() < goal.getColumn();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous - 1;
+        public final Ply.Coordinate initialize(final Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) (startLocation.getColumn() + 1),
+                    (char) (startLocation.getRow() - 1)
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous + 1;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go east
     private static final LineIterator EAST_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public final boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal) {
             return goal == null
-                    ? column < OTHELLO_DIMENSION.width
-                    : column < goal.getColumn();
+                    ? current.getColumn() < (char) ('A' + OTHELLO_DIMENSION.width)
+                    : current.getColumn() < goal.getColumn();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous;
+        public final Ply.Coordinate initialize(final Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) (startLocation.getColumn() + 1),
+                    (char) startLocation.getRow()
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous + 1;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go south east
     private static final LineIterator SOUTH_EAST_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? row < OTHELLO_DIMENSION.height && column < OTHELLO_DIMENSION.width
-                    : row < goal.getRow() && column < goal.getColumn();
+                    ? current.getRow() < (char) ('1' + OTHELLO_DIMENSION.height)
+                    && current.getColumn() < (char) ('A' + OTHELLO_DIMENSION.width)
+                    : current.getRow() < goal.getRow() && current.getColumn() < goal.getColumn();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous + 1;
+        public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) (startLocation.getColumn() + 1),
+                    (char) (startLocation.getRow() + 1)
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous + 1;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go south
     private static final LineIterator SOUTH_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? row < OTHELLO_DIMENSION.height
-                    : row < goal.getRow();
+                    ? current.getRow() < (char) ('1' + OTHELLO_DIMENSION.height)
+                    : current.getRow() < goal.getRow();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous + 1;
+        public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) startLocation.getColumn(),
+                    (char) (startLocation.getRow() + 1)
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go south west
     private static final LineIterator SOUTH_WEST_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? row < OTHELLO_DIMENSION.height && column >= 0
-                    : row < goal.getRow() && column > goal.getColumn();
+                    ? current.getRow() < (char) ('1' + OTHELLO_DIMENSION.height) && current.getColumn() >= 'A'
+                    : current.getRow() < goal.getRow() && current.getColumn() > goal.getColumn();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous + 1;
+        public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) (startLocation.getColumn() - 1),
+                    (char) (startLocation.getRow() + 1)
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous - 1;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go west
     private static final LineIterator WEST_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? column >= 0
-                    : column > goal.getColumn();
+                    ? current.getColumn() >= 'A'
+                    : current.getColumn() > goal.getColumn();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous;
+        public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) (startLocation.getColumn() - 1),
+                    (char) startLocation.getRow()
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous - 1;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
     //Iterator when we go north west
     private static final LineIterator NORTH_WEST_ITERATOR = new LineIterator() {
+
         @Override
-        public boolean verify(int row, int column, Ply.Coordinate goal) {
+        public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? row >= 0 && column >= 0
-                    : row > goal.getRow() && column > goal.getColumn();
+                    ? current.getRow() >= '1' && current.getColumn() >= 'A'
+                    : current.getRow() > goal.getRow() && current.getColumn() > goal.getColumn();
         }
 
         @Override
-        public int updateRow(int previous) {
-            return previous - 1;
+        public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
+            return Coordinate(
+                    (char) (startLocation.getColumn() - 1),
+                    (char) (startLocation.getRow() - 1)
+            );
         }
 
         @Override
-        public int updateColumn(int previous) {
-            return previous - 1;
+        public final Ply.Coordinate update(final Ply.Coordinate previous) {
+            //same gap...
+            return initialize(previous);
         }
     };
 
