@@ -43,11 +43,11 @@ public class LegalMoveRegistration
     /**
      * Current player pawn ID
      */
-    private int playerPawn;
+    private final int playerPawn;
     /**
      * Current rival pawn ID
      */
-    private int rivalPawn;
+    private final int rivalPawn;
 
     public LegalMoveRegistration(
             Board board,

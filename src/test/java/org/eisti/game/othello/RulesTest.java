@@ -53,11 +53,12 @@ public class RulesTest
         implements OthelloProperties {
 
     @Mock
+    private
     IPlayer playerOne;
     @Mock
     IPlayer playerTwo;
 
-    Rules othelloRules;
+    private Rules othelloRules;
 
     @Before
     public void createReferee() {

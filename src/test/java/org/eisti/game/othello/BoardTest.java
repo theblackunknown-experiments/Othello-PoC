@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class BoardTest
         implements OthelloProperties {
 
-    Board othelloBoard;
+    private Board othelloBoard;
 
     @Before
     public void generateNewBoard() {

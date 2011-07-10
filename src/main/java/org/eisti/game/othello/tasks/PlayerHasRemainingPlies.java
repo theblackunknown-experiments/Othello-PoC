@@ -33,7 +33,7 @@ import java.util.concurrent.Callable;
 public class PlayerHasRemainingPlies
     implements Callable<Boolean> {
 
-    private OthelloContext _context;
+    private final OthelloContext _context;
 
     public PlayerHasRemainingPlies(
             OthelloContext fakeContext

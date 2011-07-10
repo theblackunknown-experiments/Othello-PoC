@@ -36,9 +36,9 @@ import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
  */
 abstract public class LineTraversor {
 
-    protected Board _board;
-    protected Ply.Coordinate _start;
-    protected GridTraversor _direction;
+    final Board _board;
+    final Ply.Coordinate _start;
+    final GridTraversor _direction;
 
     /**
      * Task constructor
@@ -47,7 +47,7 @@ abstract public class LineTraversor {
      * @param start     start position of traversal
      * @param direction direction in which we iterate
      */
-    public LineTraversor(
+    LineTraversor(
             Board board,
             Ply.Coordinate start,
             GridTraversor direction) {
@@ -102,7 +102,7 @@ abstract public class LineTraversor {
      * @param direction direction in which we want follow
      * @return LineIterator that guarantees we can in the right direction
      */
-    protected static LineIterator getIterator(GridTraversor direction) {
+    static LineIterator getIterator(GridTraversor direction) {
         switch (direction) {
             case NORTH:
                 return NORTH_ITERATOR;

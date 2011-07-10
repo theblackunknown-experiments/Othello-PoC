@@ -40,7 +40,7 @@ public class ReversePawn
     /**
      * Current player pawn ID
      */
-    private int playerPawn;
+    private final int playerPawn;
 
     public ReversePawn(
             Board board,
