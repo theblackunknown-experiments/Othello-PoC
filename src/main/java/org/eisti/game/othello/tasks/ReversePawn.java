@@ -33,7 +33,7 @@ import org.eisti.labs.game.Ply;
  * @author MACHIZAUD Andréa
  * @version 7/2/11
  */
-public class ReversePawn
+public final class ReversePawn
         extends LineTraversor
         implements Runnable {
 
@@ -55,7 +55,7 @@ public class ReversePawn
     /**
      * Reverse pawn core
      */
-    public void run() {
+    public final void run() {
         LineIterator checker = getIterator(_direction);
         //look if we can reverse
         for (Ply.Coordinate cursor = checker.initialize(_start);

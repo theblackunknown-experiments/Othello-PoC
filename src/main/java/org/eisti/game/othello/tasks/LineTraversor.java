@@ -26,10 +26,12 @@ import org.eisti.game.othello.Board;
 import org.eisti.labs.game.Ply;
 
 import static org.eisti.game.othello.OthelloProperties.OTHELLO_DIMENSION;
-import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
+import static org.eisti.labs.game.Ply.Coordinate.*;
 
 /**
  * Represent task which traverse a grid line
+ * FIXME Generalize bound collisions for traversor
+ * TODO Migrate it to core framework
  *
  * @author MACHIZAUD Andréa
  * @version 7/2/11
@@ -131,15 +133,15 @@ abstract public class LineTraversor {
         @Override
         public final boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal) {
             return goal == null
-                    ? current.getRow() >= '1'
-                    : current.getRow() > goal.getRow();
+                    ? !current.getRow().equals(BEFORE_FIRST_ROW)
+                    : rowLabel2index(current.getRow()) > rowLabel2index(goal.getRow());
         }
 
         @Override
         public final Ply.Coordinate initialize(final Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) startLocation.getColumn(),
-                    (char) (startLocation.getRow() - 1)
+                    startLocation.getColumn(),
+                    rowIndex2Label(rowLabel2index(startLocation.getRow()) - 1)
             );
         }
 
@@ -155,15 +157,17 @@ abstract public class LineTraversor {
         @Override
         public final boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal) {
             return goal == null
-                    ? current.getRow() >= '1' && current.getColumn() < (char) ('A' + OTHELLO_DIMENSION.width)
-                    : current.getRow() > goal.getRow() && current.getColumn() < goal.getColumn();
+                    ? !current.getRow().equals(BEFORE_FIRST_ROW)
+                    && columnLabel2index(current.getColumn()) < OTHELLO_DIMENSION.width
+                    : rowLabel2index(current.getRow()) > rowLabel2index(goal.getRow())
+                    && columnLabel2index(current.getColumn()) < columnLabel2index(goal.getColumn());
         }
 
         @Override
         public final Ply.Coordinate initialize(final Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) (startLocation.getColumn() + 1),
-                    (char) (startLocation.getRow() - 1)
+                    columnIndex2Label(columnLabel2index(startLocation.getColumn()) + 1),
+                    rowIndex2Label(rowLabel2index(startLocation.getRow()) - 1)
             );
         }
 
@@ -179,15 +183,15 @@ abstract public class LineTraversor {
         @Override
         public final boolean verify(final Ply.Coordinate current, final Ply.Coordinate goal) {
             return goal == null
-                    ? current.getColumn() < (char) ('A' + OTHELLO_DIMENSION.width)
-                    : current.getColumn() < goal.getColumn();
+                    ? columnLabel2index(current.getColumn()) < OTHELLO_DIMENSION.width
+                    : columnLabel2index(current.getColumn()) < columnLabel2index(goal.getColumn());
         }
 
         @Override
         public final Ply.Coordinate initialize(final Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) (startLocation.getColumn() + 1),
-                    (char) startLocation.getRow()
+                    columnIndex2Label(columnLabel2index(startLocation.getColumn()) + 1),
+                    startLocation.getRow()
             );
         }
 
@@ -203,16 +207,17 @@ abstract public class LineTraversor {
         @Override
         public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? current.getRow() < (char) ('1' + OTHELLO_DIMENSION.height)
-                    && current.getColumn() < (char) ('A' + OTHELLO_DIMENSION.width)
-                    : current.getRow() < goal.getRow() && current.getColumn() < goal.getColumn();
+                    ? rowLabel2index(current.getRow()) < OTHELLO_DIMENSION.height
+                    && columnLabel2index(current.getColumn()) < OTHELLO_DIMENSION.width
+                    : rowLabel2index(current.getRow()) < rowLabel2index(goal.getRow())
+                    && columnLabel2index(current.getColumn()) < columnLabel2index(goal.getColumn());
         }
 
         @Override
         public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) (startLocation.getColumn() + 1),
-                    (char) (startLocation.getRow() + 1)
+                    columnIndex2Label(columnLabel2index(startLocation.getColumn()) + 1),
+                    rowIndex2Label(rowLabel2index(startLocation.getRow()) + 1)
             );
         }
 
@@ -228,15 +233,15 @@ abstract public class LineTraversor {
         @Override
         public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? current.getRow() < (char) ('1' + OTHELLO_DIMENSION.height)
-                    : current.getRow() < goal.getRow();
+                    ? rowLabel2index(current.getRow()) < OTHELLO_DIMENSION.height
+                    : rowLabel2index(current.getRow()) < rowLabel2index(goal.getRow());
         }
 
         @Override
         public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) startLocation.getColumn(),
-                    (char) (startLocation.getRow() + 1)
+                    startLocation.getColumn(),
+                    rowIndex2Label(rowLabel2index(startLocation.getRow()) + 1)
             );
         }
 
@@ -252,15 +257,17 @@ abstract public class LineTraversor {
         @Override
         public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? current.getRow() < (char) ('1' + OTHELLO_DIMENSION.height) && current.getColumn() >= 'A'
-                    : current.getRow() < goal.getRow() && current.getColumn() > goal.getColumn();
+                    ? rowLabel2index(current.getRow()) < OTHELLO_DIMENSION.height
+                    && !current.getColumn().equals(BEFORE_FIRST_COLUMN)
+                    : rowLabel2index(current.getRow()) < rowLabel2index(goal.getRow())
+                    && columnLabel2index(current.getColumn()) > columnLabel2index(goal.getColumn());
         }
 
         @Override
         public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) (startLocation.getColumn() - 1),
-                    (char) (startLocation.getRow() + 1)
+                    columnIndex2Label(columnLabel2index(startLocation.getColumn()) - 1),
+                    rowIndex2Label(rowLabel2index(startLocation.getRow()) + 1)
             );
         }
 
@@ -276,15 +283,15 @@ abstract public class LineTraversor {
         @Override
         public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? current.getColumn() >= 'A'
-                    : current.getColumn() > goal.getColumn();
+                    ? !current.getColumn().equals(BEFORE_FIRST_COLUMN)
+                    : columnLabel2index(current.getColumn()) > columnLabel2index(goal.getColumn());
         }
 
         @Override
         public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) (startLocation.getColumn() - 1),
-                    (char) startLocation.getRow()
+                    columnIndex2Label(columnLabel2index(startLocation.getColumn()) - 1),
+                    startLocation.getRow()
             );
         }
 
@@ -300,15 +307,16 @@ abstract public class LineTraversor {
         @Override
         public boolean verify(Ply.Coordinate current, Ply.Coordinate goal) {
             return goal == null
-                    ? current.getRow() >= '1' && current.getColumn() >= 'A'
-                    : current.getRow() > goal.getRow() && current.getColumn() > goal.getColumn();
+                    ? !current.getRow().equals(BEFORE_FIRST_ROW) && !current.getColumn().equals(BEFORE_FIRST_COLUMN)
+                    : rowLabel2index(current.getRow()) > rowLabel2index(goal.getRow())
+                    && columnLabel2index(current.getColumn()) > columnLabel2index(goal.getColumn());
         }
 
         @Override
         public Ply.Coordinate initialize(Ply.Coordinate startLocation) {
             return Coordinate(
-                    (char) (startLocation.getColumn() - 1),
-                    (char) (startLocation.getRow() - 1)
+                    columnIndex2Label(columnLabel2index(startLocation.getColumn()) - 1),
+                    rowIndex2Label(rowLabel2index(startLocation.getRow()) - 1)
             );
         }
 

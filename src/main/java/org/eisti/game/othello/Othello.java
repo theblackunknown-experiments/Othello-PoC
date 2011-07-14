@@ -22,31 +22,37 @@
 package org.eisti.game.othello;
 
 import org.eisti.labs.game.GameConfiguration;
+import org.eisti.labs.game.IPlayer;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 7/3/11
  */
-public class Othello
-        implements GameConfiguration {
+public final class Othello
+        implements GameConfiguration, OthelloProperties {
 
     @Override
-    public String provideBoardClazz() {
+    public final String provideBoardClazz() {
         return Board.class.getCanonicalName();
     }
 
     @Override
-    public String provideRulesClazz() {
+    public final String provideRulesClazz() {
         return Rules.class.getCanonicalName();
     }
 
     @Override
-    public String provideContextClazz() {
+    public final String provideContextClazz() {
         return OthelloContext.class.getCanonicalName();
     }
 
     @Override
-    public void shutdownHook(){
+    public final void shutdownHook(){
         Rules.LINE_CHECKER.shutdownNow();
+    }
+
+    @Override
+    public final IPlayer[] orderedPlayers(final IPlayer[] players) {
+        return players;
     }
 }

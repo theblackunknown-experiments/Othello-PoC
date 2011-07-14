@@ -22,6 +22,12 @@
 package org.eisti.game.othello;
 
 import org.eisti.labs.game.AbstractBoard;
+import org.eisti.labs.game.Ply;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.eisti.labs.game.Ply.Coordinate.*;
 
 /**
  * <p>
@@ -50,7 +56,7 @@ import org.eisti.labs.game.AbstractBoard;
  * @author MACHIZAUD Andréa
  * @version 6/19/11
  */
-public class Board
+public final class Board
         extends AbstractBoard<Board>
         implements OthelloProperties {
 
@@ -61,13 +67,102 @@ public class Board
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final Ply.Coordinate[] getCaseAround(Ply.Coordinate center) {
+        Collection<Ply.Coordinate> neighborhood = new ArrayList<Ply.Coordinate>(4);
+
+        final int width = getDimension().width;
+        final int height = getDimension().height;
+
+        //vertical neighborhood
+        int centerRowIndex = rowLabel2index(center.getRow());
+        int centerColumnIndex = columnLabel2index(center.getColumn());
+
+        if (centerRowIndex == 0) {//first row
+
+            //South
+
+            neighborhood.add(
+                    Coordinate(
+                            center.getColumn(),
+                            rowIndex2Label(centerRowIndex + 1)));
+
+
+        } else if (centerRowIndex == height - 1) {
+
+            //North
+
+            neighborhood.add(
+                    Coordinate(
+                            center.getColumn(),
+                            rowIndex2Label(centerRowIndex - 1)));
+
+        } else {
+
+            //South
+
+            neighborhood.add(
+                    Coordinate(
+                            center.getColumn(),
+                            rowIndex2Label(centerRowIndex + 1)));
+
+            //North
+
+            neighborhood.add(
+                    Coordinate(
+                            center.getColumn(),
+                            rowIndex2Label(centerRowIndex - 1)));
+        }
+
+        //horizontal neighborhood
+        if (centerColumnIndex == 0) {
+
+            //East
+
+            neighborhood.add(
+                    Coordinate(
+                            columnIndex2Label(centerColumnIndex + 1),
+                            center.getRow()));
+
+        } else if (centerColumnIndex == width - 1) {
+
+            //West
+
+            neighborhood.add(
+                    Coordinate(
+                            columnIndex2Label(centerColumnIndex - 1),
+                            center.getRow()));
+        } else {
+
+            //East
+
+            neighborhood.add(
+                    Coordinate(
+                            columnIndex2Label(centerColumnIndex + 1),
+                            center.getRow()));
+
+            //West
+
+            neighborhood.add(
+                    Coordinate(
+                            columnIndex2Label(centerColumnIndex - 1),
+                            center.getRow()));
+        }
+
+        return neighborhood
+                .toArray(new Ply.Coordinate[neighborhood.size()]);
+    }
+
+    /**
      * Othello start a cross at the center of the board
      */
     @Override
-    protected void initializeBoard() {
-        setPawn('D','4',WHITE_PAWN_ID);
-        setPawn('D','5',BLACK_PAWN_ID);
-        setPawn('E','4',BLACK_PAWN_ID);
-        setPawn('E','5',WHITE_PAWN_ID);
+    protected final void initializeBoard() {
+        setPawn("D", "4", WHITE_PAWN_ID);
+        setPawn("D", "5", BLACK_PAWN_ID);
+        setPawn("E", "4", BLACK_PAWN_ID);
+        setPawn("E", "5", WHITE_PAWN_ID);
     }
 }

@@ -34,11 +34,11 @@ import java.util.concurrent.Future;
  * @author MACHIZAUD Andréa
  * @version 23/06/11
  */
-public class OthelloContext
+public final class OthelloContext
         extends GameContext<Board, OthelloContext>
         implements OthelloProperties {
 
-    private static Board[] castArray(IBoard[] generalArray) {
+    private static Board[] castArray(final IBoard[] generalArray) {
         Board[] castedArray = new Board[generalArray.length];
         for (int i = generalArray.length; i-- > 0; )
             castedArray[i] = (Board) generalArray[i];
@@ -59,7 +59,7 @@ public class OthelloContext
 
     //TODO Test Case
     @Override
-    public GameState getState() {
+    public final GameState getState() {
         int[] pawnCounter = new int[NUMBERS_OF_PLAYERS];
         pawnCounter[BLACK] = pawnCounter[WHITE] = 0;
         Board currentBoard = getBoard();
@@ -114,7 +114,6 @@ public class OthelloContext
 
         } catch (InterruptedException e) {
             //Computation can be interrupted by bot worker
-//            throw new Error("Unexpected error while computing remaining player's moves", e);
             return null;
         } catch (ExecutionException e) {
             throw new Error("Unexpected error while computing remaining player's moves", e);
@@ -125,7 +124,7 @@ public class OthelloContext
     }
 
     @Override
-    protected OthelloContext buildEmptyContext() {
+    protected final OthelloContext buildEmptyContext() {
         return new OthelloContext();
     }
 }

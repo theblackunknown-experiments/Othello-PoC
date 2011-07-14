@@ -25,6 +25,7 @@ import org.eisti.game.othello.tasks.LegalMoveRegistration;
 import org.eisti.game.othello.tasks.LineTraversor;
 import org.eisti.game.othello.tasks.ReversePawn;
 import org.eisti.labs.game.AbstractRules;
+import org.eisti.labs.game.IBoard;
 import org.eisti.labs.game.IPlayer;
 import org.eisti.labs.game.Ply;
 
@@ -35,12 +36,13 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.eisti.game.othello.tasks.LineTraversor.GridTraversor.values;
+import static org.eisti.labs.util.Validation.require;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 6/20/11
  */
-public class Rules
+public final class Rules
         extends AbstractRules<Board, OthelloContext>
         implements OthelloProperties {
 
@@ -49,22 +51,22 @@ public class Rules
             Executors.newFixedThreadPool(values().length);
 
     @Override
-    public int getNumberOfPlayer() {
+    public final int getNumberOfPlayer() {
         return NUMBERS_OF_PLAYERS;
     }
 
     @Override
-    public int getNumberOfTypedPawns() {
+    public final int getNumberOfTypedPawns() {
         return NUMBERS_OF_TYPED_PAWN;
     }
 
     @Override
-    public Set<Ply> getLegalMoves(OthelloContext context) {
+    public final Set<Ply> getLegalMoves(OthelloContext context) {
         return legalMoves(context);
     }
 
     @Override
-    public OthelloContext doPly(OthelloContext previousContext, Ply ply) {
+    public final OthelloContext doPly(OthelloContext previousContext, Ply ply) {
         //same game if a player pass
         if (ply.isPass())
             return previousContext.branchOff(previousContext.getBoard());
@@ -72,7 +74,7 @@ public class Rules
         Board oldBoard = previousContext.getBoard();
         IPlayer activePlayer = previousContext.getActivePlayer().getFirst();
 
-        require(oldBoard.isAt(ply.getDestination(), Iboard.NO_PAWN),
+        require(oldBoard.isAt(ply.getDestination(), IBoard.NO_PAWN),
                 "Already a pawn at given ply position : " + ply);
 
         Board subGame = oldBoard.clone();

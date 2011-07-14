@@ -30,13 +30,12 @@ import org.eisti.labs.game.Ply;
 import java.util.concurrent.Callable;
 
 import static org.eisti.labs.game.IBoard.NO_PAWN;
-import static org.eisti.labs.game.Ply.Coordinate.Coordinate;
 
 /**
  * @author MACHIZAUD Andréa
  * @version 7/2/11
  */
-public class LegalMoveRegistration
+public final class LegalMoveRegistration
         extends LineTraversor
         implements Callable<Ply> {
 
@@ -67,36 +66,36 @@ public class LegalMoveRegistration
      * @return legal move if any or null
      */
     @Override
-    public Ply call() {
+    public final Ply call() {
         boolean rivalPawnEncountered = false;
         LineIterator checker = getIterator(_direction);
-//        for (int rowCursor = _start.getRow(),
-//                     columnCursor = _start.getColumn();
-//             checker.verify(rowCursor, columnCursor, null);
-//             rowCursor = checker.updateRow(rowCursor),
-//                     columnCursor = checker.updateColumn(columnCursor)) {
-        for (Ply.Coordinate cursor = checker.initialize(_start);
-             checker.verify(cursor, null);
-             cursor = checker.update(cursor)) {
+        Ply.Coordinate cursor = null;
+        try {
+            for (cursor = checker.initialize(_start);
+                 checker.verify(cursor, null);
+                 cursor = checker.update(cursor)) {
 
-            int pawnID = _board.getPawn(cursor);
+                int pawnID = _board.getPawn(cursor);
 
-            //stop on a empty case
-            if (pawnID == NO_PAWN) {
-                //it's a legal move if we already encounter a rival pawn,
-                // thus we can reverse a line
-                if (rivalPawnEncountered)
-                    return new Ply(cursor);
-                else
+                //stop on a empty case
+                if (pawnID == NO_PAWN) {
+                    //it's a legal move if we already encounter a rival pawn,
+                    // thus we can reverse a line
+                    if (rivalPawnEncountered)
+                        return new Ply(cursor);
+                    else
+                        break;
+                } else if (pawnID == playerPawn) // own pawn encountered, no line reverse possible
+                {
                     break;
-            } else if (pawnID == playerPawn) // own pawn encountered, no line reverse possible
-            {
-                break;
-            } else if (pawnID == rivalPawn) // rival pawn encountered, try to find where we can put a pawn
-            {
-                rivalPawnEncountered = true;
-            }
+                } else if (pawnID == rivalPawn) // rival pawn encountered, try to find where we can put a pawn
+                {
+                    rivalPawnEncountered = true;
+                }
 
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new RuntimeException("Fail with given start : " + _start + ", and current : " + cursor, ex);
         }
         return null;
     }

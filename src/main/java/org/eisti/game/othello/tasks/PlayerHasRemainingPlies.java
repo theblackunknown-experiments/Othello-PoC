@@ -30,7 +30,7 @@ import java.util.concurrent.Callable;
  * @author MACHIZAUD Andréa
  * @version 7/2/11
  */
-public class PlayerHasRemainingPlies
+public final class PlayerHasRemainingPlies
     implements Callable<Boolean> {
 
     private final OthelloContext _context;
@@ -42,7 +42,7 @@ public class PlayerHasRemainingPlies
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public final Boolean call() throws Exception {
         return Rules.legalMoves(_context).size() > 0;
     }
 }
